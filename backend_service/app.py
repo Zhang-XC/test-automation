@@ -7,15 +7,25 @@ import random
 import flask
 
 from flask import jsonify, make_response, request
+from flask_jwt_extended import (
+    create_access_token,
+    JWTManager,
+    jwt_required,
+    set_access_cookies,
+    get_jwt_identity,
+)
 
 
-api = flask.Flask(__name__)
+app = flask.Flask(__name__)
+
+app.config['JWT_SECRET_KEY'] = 'super-secret'
+jwt = JWTManager(app)
+
 
 # Mock databases
 USERS = {
-    'testuser': 'password123'
+    'testuser': {"user_id": "u123", "password": 'password123'}
 }
-TOKENS = {}
 PRODUCTS = {
     "1": {"name": "Laptop", "price": 1200},
     "2": {"name": "Headphones", "price": 150}
@@ -24,56 +34,46 @@ CART = {}
 ORDERS = {}
 
 
-def get_authorized_token():
-    token = request.headers.get("Authorization")
-    if token in TOKENS:
-        return token
-    return None
-
-
-@api.route('/auth/login', methods=['POST'])
+@app.route('/auth/login', methods=['POST'])
 def login():
     username = flask.request.form.get('user_name')
-    password = flask.request.form.get('passwd')
+    password = flask.request.form.get('password')
     if username and password:
-        if USERS.get(username) == password:
-            token = str(uuid.uuid4())
-            TOKENS[token] = username
-            return jsonify({"token": token})
+        user = USERS.get(username)
+        if user and user["password"] == password:
+            acc_token = create_access_token(identity=user["user_id"])
+            response = jsonify({"message": "Login successful"})
+            set_access_cookies(response, acc_token)
+            return response
         else:
-            return jsonify({"error": "Bad credentials"})
+            return jsonify({"error": "Invalid username or password"})
     else:
         return jsonify({"error": "Missing key parameters"})
     
 
-@api.route('/auth/register', methods=['POST'])
+@jwt_required(locations=['headers'])
+@app.route('/auth/register', methods=['POST'])
 def register_user():
     username = flask.request.form.get('user_name')
-    password = flask.request.form.get('passwd')
+    password = flask.request.form.get('password')
     if username and password:
         if username in USERS:
             return jsonify({"error": "Username exists"})
-        USERS[username] = password
+        USERS[username] = {
+            "user_id": str(uuid.uuid4()),
+            "password": password
+        }
         return jsonify({"message": "Successfully registered user"})
     else:
         return jsonify({"error": "Missing key parameters"})
-    
-
-@api.route('/auth/logout', methods=['POST'])
-def logout():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
-    TOKENS.pop(token)
-    return jsonify({"message": "Successfully logged out"})
 
 
-@api.route('/products', methods=['GET'])
+@app.route('/products', methods=['GET'])
 def view_products():
     return jsonify(PRODUCTS)
 
 
-@api.route('/products/<product_id>', methods=['GET'])
+@app.route('/products/<product_id>', methods=['GET'])
 def view_product(product_id):
     if product_id in PRODUCTS:
         return jsonify(PRODUCTS[product_id])
@@ -81,26 +81,24 @@ def view_product(product_id):
         return jsonify({"error": "Product not found"})
 
 
-@api.route('/cart', methods=['GET'])
+@jwt_required(locations=['headers'])
+@app.route('/cart', methods=['GET'])
 def view_cart():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
-    return jsonify(CART.get(token, []))
+    user_id = get_jwt_identity()
+    return jsonify(CART.get(user_id, []))
 
 
-@api.route('/cart', methods=['POST'])
+@jwt_required(locations=['headers'])
+@app.route('/cart', methods=['POST'])
 def add_to_cart():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
+    user_id = get_jwt_identity()
     data = request.get_json()
-    pid = data.get("product_id")
-    if pid is not None :
-        if pid in PRODUCTS:
-            product_info = PRODUCTS[pid].copy()
-            product_info["product_id"] = pid
-            CART.setdefault(token, []).append(product_info)
+    product_id = data.get("product_id")
+    if product_id is not None :
+        if product_id in PRODUCTS:
+            product_info = PRODUCTS[product_id].copy()
+            product_info["product_id"] = product_id
+            CART.setdefault(user_id, []).append(product_info)
             return jsonify({"message": "Added to cart"})
         else:
             return jsonify({"error": "Product not found"})
@@ -108,53 +106,49 @@ def add_to_cart():
         return jsonify({"error": "Missing key parameter"})
 
 
-@api.route('/cart/remove', methods=['POST'])
+@jwt_required(locations=['headers'])
+@app.route('/cart/remove', methods=['POST'])
 def remove_from_cart():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
+    user_id = get_jwt_identity()
     data = request.get_json()
     pid = data.get("product_id")
-    for i, product in enumerate(CART.get(token, [])):
+    for i, product in enumerate(CART.get(user_id, [])):
         if pid == product["product_id"]:
-            CART[token].pop(i)
+            CART[user_id].pop(i)
             return jsonify({"message": "Successfully removed product from cart"})
     return jsonify({"error": "Product not found"})
 
 
-@api.route('/orders', methods=['GET'])
+@jwt_required(locations=['headers'])
+@app.route('/orders', methods=['GET'])
 def view_orders():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
-    return jsonify(ORDERS.get(token, []))
+    user_id = get_jwt_identity()
+    return jsonify(ORDERS.get(user_id, []))
 
 
-@api.route('/orders/<order_id>', methods=['GET'])
+@jwt_required(locations=['headers'])
+@app.route('/orders/<order_id>', methods=['GET'])
 def view_order(order_id):
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
-    for order in ORDERS.get(token, []):
+    user_id = get_jwt_identity()
+    for order in ORDERS.get(user_id, []):
         if order_id == order["order_id"]:
             return jsonify(order)
     return jsonify({"error": "Order not found"})
 
 
-@api.route('/checkout', methods=['POST'])
+@jwt_required(locations=['headers'])
+@app.route('/checkout', methods=['POST'])
 def checkout():
-    token = get_authorized_token()
-    if token is None:
-        return jsonify({"error": "Unauthorized"})
-    total = sum(item["price"] for item in CART.get(token, []))
-    ORDERS.setdefault(token, []).append({
+    user_id = get_jwt_identity()
+    total = sum(item["price"] for item in CART.get(user_id, []))
+    ORDERS.setdefault(user_id, []).append({
         "order_id": str(uuid.uuid4()),
-        "cart": CART[token],
+        "cart": CART[user_id].copy(),
         "total": total
     })
-    CART[token] = []
+    CART[user_id] = []
     return jsonify({"message": "Checkout successful", "total": total})
 
 
 if __name__ == "__main__":
-    api.run(debug=True)
+    app.run(debug=True)
