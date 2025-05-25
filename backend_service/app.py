@@ -37,7 +37,7 @@ def login():
     password = flask.request.form.get('passwd')
     if username and password:
         if USERS.get(username) == password:
-            token = uuid.uuid4()
+            token = str(uuid.uuid4())
             TOKENS[token] = username
             return jsonify({"token": token})
         else:
@@ -115,7 +115,7 @@ def remove_from_cart():
         return jsonify({"error": "Unauthorized"})
     data = request.get_json()
     pid = data.get("product_id")
-    for i, product in enumerate(CART[token]):
+    for i, product in enumerate(CART.get(token, [])):
         if pid == product["product_id"]:
             CART[token].pop(i)
             return jsonify({"message": "Successfully removed product from cart"})
@@ -127,7 +127,7 @@ def view_orders():
     token = get_authorized_token()
     if token is None:
         return jsonify({"error": "Unauthorized"})
-    return jsonify(ORDERS.get(token, {}))
+    return jsonify(ORDERS.get(token, []))
 
 
 @api.route('/orders/<order_id>', methods=['GET'])
@@ -135,9 +135,9 @@ def view_order(order_id):
     token = get_authorized_token()
     if token is None:
         return jsonify({"error": "Unauthorized"})
-    for oid, order in ORDERS.get(token, {}):
-        if order_id == oid:
-            return jsonify({order})
+    for order in ORDERS.get(token, []):
+        if order_id == order["order_id"]:
+            return jsonify(order)
     return jsonify({"error": "Order not found"})
 
 
@@ -146,12 +146,12 @@ def checkout():
     token = get_authorized_token()
     if token is None:
         return jsonify({"error": "Unauthorized"})
-    total = sum(item["price"] for item in CART[token])
-    ORDERS[token] = {
-        "order_id": uuid.uuid4(),
+    total = sum(item["price"] for item in CART.get(token, []))
+    ORDERS.setdefault(token, []).append({
+        "order_id": str(uuid.uuid4()),
         "cart": CART[token],
         "total": total
-    }
+    })
     CART[token] = []
     return jsonify({"message": "Checkout successful", "total": total})
 
