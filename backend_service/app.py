@@ -11,6 +11,7 @@ from flask_jwt_extended import (
     set_access_cookies,
     get_jwt_identity,
 )
+from bcrypt import hashpw, checkpw, gensalt
 
 
 app = flask.Flask(__name__)
@@ -32,7 +33,7 @@ def get_db():
 
 def init_db():
     db = get_db()
-    with open('schema.sql', 'r') as f:
+    with open(SCHEMA, 'r') as f:
         db.executescript(f.read())
 
 
@@ -47,22 +48,22 @@ def close_db(exception):
 def login():
     username = flask.request.form.get('username')
     password = flask.request.form.get('password')
-    if username and password:
-        db = get_db()
-        cur = db.execute("SELECT * FROM users WHERE username = ?", [username])
-        user = cur.fetchone()
-        if user and user["password"] == password:
-            acc_token = create_access_token(identity=user["user_id"])
-            response = jsonify({"message": "Login successful"})
-            set_access_cookies(response, acc_token)
-            return response
-        else:
-            return jsonify({"error": "Invalid username or password"})
-    else:
+    if not (username and password):
         return jsonify({"error": "Missing key parameters"})
     
+    password_hash = hashpw(password.encode(), gensalt())
+    db = get_db()
+    cur = db.execute("SELECT * FROM users WHERE username = ?", [username])
+    user = cur.fetchone()
+    if user and checkpw(user["password"].encode(), password_hash):
+        acc_token = create_access_token(identity=user["user_id"])
+        response = jsonify({"message": "Login successful"})
+        set_access_cookies(response, acc_token)
+        return response
+    else:
+        return jsonify({"error": "Invalid username or password"})
+    
 
-@jwt_required(locations=['headers'])
 @app.route('/auth/register', methods=['POST'])
 def register_user():
     username = flask.request.form.get('username')
@@ -70,11 +71,12 @@ def register_user():
     if not (username and password):
         return jsonify({"error": "Missing key parameters"})
     
+    password_hash = hashpw(password.encode(), gensalt())
     try:
         db = get_db()
         db.execute(
             "INSERT INTO users (username, password) VALUES (?, ?)", 
-            [username, password]
+            [username, password_hash.decode()]
         )
         db.commit()
         return jsonify({"message": "Successfully registered user"})
@@ -96,7 +98,7 @@ def view_product(product_id):
     cur = db.execute("SELECT * FROM products WHERE product_id = ?", [product_id])
     product = cur.fetchone()
     if product:
-        return jsonify(product)
+        return jsonify(dict(product))
     else:
         return jsonify({"error": "Product not found"})
 
@@ -135,7 +137,7 @@ def add_to_cart():
     else:
         try:
             db.execute(
-                "INSERT INTO cart_items (user_id, product_id, quantity) VALUES (? ? ?)",
+                "INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)",
                 [user_id, product_id, 1]
             )
         except sqlite3.IntegrityError:
@@ -211,7 +213,7 @@ def checkout():
             [user_id, product_id]
         )
         db.execute(
-            "INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (? ? ? ?)",
+            "INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)",
             [user_id, product_id, quantity, price * quantity]
         )
         order_total += price * quantity
