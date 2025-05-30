@@ -49,7 +49,7 @@ def login():
     username = flask.request.form.get('username')
     password = flask.request.form.get('password')
     if not (username and password):
-        return jsonify({"error": "Missing key parameters"})
+        return jsonify({"error": "Missing key parameters"}), 400
     
     password_hash = hashpw(password.encode(), gensalt())
     db = get_db()
@@ -57,11 +57,11 @@ def login():
     user = cur.fetchone()
     if user and checkpw(user["password"].encode(), password_hash):
         acc_token = create_access_token(identity=user["user_id"])
-        response = jsonify({"message": "Login successful"})
+        response = jsonify({"message": "Login successful"}), 200
         set_access_cookies(response, acc_token)
         return response
     else:
-        return jsonify({"error": "Invalid username or password"})
+        return jsonify({"error": "Invalid username or password"}), 400
     
 
 @app.route('/auth/register', methods=['POST'])
@@ -69,7 +69,7 @@ def register_user():
     username = flask.request.form.get('username')
     password = flask.request.form.get('password')
     if not (username and password):
-        return jsonify({"error": "Missing key parameters"})
+        return jsonify({"error": "Missing key parameters"}), 400
     
     password_hash = hashpw(password.encode(), gensalt())
     try:
@@ -79,9 +79,9 @@ def register_user():
             [username, password_hash.decode()]
         )
         db.commit()
-        return jsonify({"message": "Successfully registered user"})
+        return jsonify({"message": "Successfully registered user"}), 200
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Username exists"})
+        return jsonify({"error": "Username exists"}), 409
 
 
 @app.route('/products', methods=['GET'])
@@ -89,7 +89,7 @@ def view_products():
     db = get_db()
     cur = db.execute("SELECT * FROM products")
     products = cur.fetchall()
-    return jsonify([dict(product) for product in products])
+    return jsonify([dict(product) for product in products]), 200
 
 
 @app.route('/products/<product_id>', methods=['GET'])
@@ -98,9 +98,9 @@ def view_product(product_id):
     cur = db.execute("SELECT * FROM products WHERE product_id = ?", [product_id])
     product = cur.fetchone()
     if product:
-        return jsonify(dict(product))
+        return jsonify(dict(product)), 200
     else:
-        return jsonify({"error": "Product not found"})
+        return jsonify({"error": "Product not found"}), 404
 
 
 @jwt_required(locations=['headers'])
@@ -110,7 +110,7 @@ def view_cart():
     db = get_db()
     cur = db.execute("SELECT * FROM cart_items WHERE user_id = ?", [user_id])
     cart_items = cur.fetchall()
-    return jsonify([dict(item) for item in cart_items])
+    return jsonify([dict(item) for item in cart_items]), 200
 
 
 @jwt_required(locations=['headers'])
@@ -120,7 +120,7 @@ def add_to_cart():
     data = request.get_json()
     product_id = data.get("product_id")
     if not product_id:
-        return jsonify({"error": "Missing key parameter"})
+        return jsonify({"error": "Missing key parameter"}), 400
     
     db = get_db()
     cur = db.execute(
@@ -141,9 +141,9 @@ def add_to_cart():
                 [user_id, product_id, 1]
             )
         except sqlite3.IntegrityError:
-            return jsonify({"error": "Invalid user_id or product_id"})
+            return jsonify({"error": "Invalid user_id or product_id"}), 400
     db.commit()
-    return jsonify({"message": "Successfully added item to cart"})
+    return jsonify({"message": "Successfully added item to cart"}), 200
 
 
 @jwt_required(locations=['headers'])
@@ -153,7 +153,7 @@ def remove_from_cart():
     data = request.get_json()
     product_id = data.get("product_id")
     if not product_id:
-        return jsonify({"error": "Missing key parameter"})
+        return jsonify({"error": "Missing key parameter"}), 400
     
     db = get_db()
     cur = db.execute(
@@ -162,7 +162,7 @@ def remove_from_cart():
     )
     row = cur.fetchone()
     if not row:
-        return jsonify({"error": "Item not found in cart"})
+        return jsonify({"error": "Item not found in cart"}), 404
     
     quantity = row["quantity"]
     if quantity > 1:
@@ -176,7 +176,7 @@ def remove_from_cart():
             [user_id, product_id]
         )
     db.commit()
-    return jsonify({"message": "Successfully removed product from cart"})
+    return jsonify({"message": "Successfully removed product from cart"}), 200
 
 
 @jwt_required(locations=['headers'])
@@ -186,7 +186,7 @@ def view_orders():
     db = get_db()
     cur = db.execute("SELECT * FROM orders WHERE user_id = ?", [user_id])
     orders = cur.fetchall()
-    return jsonify([dict(order) for order in orders])
+    return jsonify([dict(order) for order in orders]), 200
 
 
 @jwt_required(locations=['headers'])
@@ -218,7 +218,7 @@ def checkout():
         )
         order_total += price * quantity
     db.commit()
-    return jsonify({"message": "Checkout successful", "total": order_total})
+    return jsonify({"message": "Checkout successful", "total": order_total}), 200
 
 
 if __name__ == "__main__":
