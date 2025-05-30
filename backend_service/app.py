@@ -1,12 +1,9 @@
-import os
-import sys
-import json
 import uuid
-import random
+import sqlite3
 
 import flask
 
-from flask import jsonify, make_response, request
+from flask import jsonify, request, g
 from flask_jwt_extended import (
     create_access_token,
     JWTManager,
@@ -21,25 +18,39 @@ app = flask.Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'super-secret'
 jwt = JWTManager(app)
 
+DATABASE = "database/ecommerce.db"
+SCHEMA = "database/schema.sql"
 
-# Mock databases
-USERS = {
-    'testuser': {"user_id": "u123", "password": 'password123'}
-}
-PRODUCTS = {
-    "1": {"name": "Laptop", "price": 1200},
-    "2": {"name": "Headphones", "price": 150}
-}
-CART = {}
-ORDERS = {}
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DATABASE)
+        g.db.execute("PRAGMA foreign_keys = ON")
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+
+def init_db():
+    db = get_db()
+    with open('schema.sql', 'r') as f:
+        db.executescript(f.read())
+
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 
 @app.route('/auth/login', methods=['POST'])
 def login():
-    username = flask.request.form.get('user_name')
+    username = flask.request.form.get('username')
     password = flask.request.form.get('password')
     if username and password:
-        user = USERS.get(username)
+        db = get_db()
+        cur = db.execute("SELECT * FROM users WHERE username = ?", [username])
+        user = cur.fetchone()
         if user and user["password"] == password:
             acc_token = create_access_token(identity=user["user_id"])
             response = jsonify({"message": "Login successful"})
@@ -54,29 +65,38 @@ def login():
 @jwt_required(locations=['headers'])
 @app.route('/auth/register', methods=['POST'])
 def register_user():
-    username = flask.request.form.get('user_name')
+    username = flask.request.form.get('username')
     password = flask.request.form.get('password')
-    if username and password:
-        if username in USERS:
-            return jsonify({"error": "Username exists"})
-        USERS[username] = {
-            "user_id": str(uuid.uuid4()),
-            "password": password
-        }
-        return jsonify({"message": "Successfully registered user"})
-    else:
+    if not (username and password):
         return jsonify({"error": "Missing key parameters"})
+    
+    try:
+        db = get_db()
+        db.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)", 
+            [username, password]
+        )
+        db.commit()
+        return jsonify({"message": "Successfully registered user"})
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Username exists"})
 
 
 @app.route('/products', methods=['GET'])
 def view_products():
-    return jsonify(PRODUCTS)
+    db = get_db()
+    cur = db.execute("SELECT * FROM products")
+    products = cur.fetchall()
+    return jsonify([dict(product) for product in products])
 
 
 @app.route('/products/<product_id>', methods=['GET'])
 def view_product(product_id):
-    if product_id in PRODUCTS:
-        return jsonify(PRODUCTS[product_id])
+    db = get_db()
+    cur = db.execute("SELECT * FROM products WHERE product_id = ?", [product_id])
+    product = cur.fetchone()
+    if product:
+        return jsonify(product)
     else:
         return jsonify({"error": "Product not found"})
 
@@ -85,7 +105,10 @@ def view_product(product_id):
 @app.route('/cart', methods=['GET'])
 def view_cart():
     user_id = get_jwt_identity()
-    return jsonify(CART.get(user_id, []))
+    db = get_db()
+    cur = db.execute("SELECT * FROM cart_items WHERE user_id = ?", [user_id])
+    cart_items = cur.fetchall()
+    return jsonify([dict(item) for item in cart_items])
 
 
 @jwt_required(locations=['headers'])
@@ -94,16 +117,31 @@ def add_to_cart():
     user_id = get_jwt_identity()
     data = request.get_json()
     product_id = data.get("product_id")
-    if product_id is not None :
-        if product_id in PRODUCTS:
-            product_info = PRODUCTS[product_id].copy()
-            product_info["product_id"] = product_id
-            CART.setdefault(user_id, []).append(product_info)
-            return jsonify({"message": "Added to cart"})
-        else:
-            return jsonify({"error": "Product not found"})
-    else:
+    if not product_id:
         return jsonify({"error": "Missing key parameter"})
+    
+    db = get_db()
+    cur = db.execute(
+        "SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?",
+        [user_id, product_id]
+    )
+    cart_item = cur.fetchone()
+
+    if cart_item:
+        db.execute(
+            "UPDATE cart_items SET quantity = quantity + 1 WHERE user_id = ? AND product_id = ?",
+            [user_id, product_id]
+        )
+    else:
+        try:
+            db.execute(
+                "INSERT INTO cart_items (user_id, product_id, quantity) VALUES (? ? ?)",
+                [user_id, product_id, 1]
+            )
+        except sqlite3.IntegrityError:
+            return jsonify({"error": "Invalid user_id or product_id"})
+    db.commit()
+    return jsonify({"message": "Successfully added item to cart"})
 
 
 @jwt_required(locations=['headers'])
@@ -111,43 +149,74 @@ def add_to_cart():
 def remove_from_cart():
     user_id = get_jwt_identity()
     data = request.get_json()
-    pid = data.get("product_id")
-    for i, product in enumerate(CART.get(user_id, [])):
-        if pid == product["product_id"]:
-            CART[user_id].pop(i)
-            return jsonify({"message": "Successfully removed product from cart"})
-    return jsonify({"error": "Product not found"})
+    product_id = data.get("product_id")
+    if not product_id:
+        return jsonify({"error": "Missing key parameter"})
+    
+    db = get_db()
+    cur = db.execute(
+        "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?",
+        [user_id, product_id]
+    )
+    row = cur.fetchone()
+    if not row:
+        return jsonify({"error": "Item not found in cart"})
+    
+    quantity = row["quantity"]
+    if quantity > 1:
+        db.execute(
+            "UPDATE cart_items SET quantity = quantity - 1 WHERE user_id = ? AND product_id = ?",
+            [user_id, product_id]
+        )
+    else:
+        db.execute(
+            "DELETE FROM cart_items WHERE user_id = ? AND product_id = ?",
+            [user_id, product_id]
+        )
+    db.commit()
+    return jsonify({"message": "Successfully removed product from cart"})
 
 
 @jwt_required(locations=['headers'])
 @app.route('/orders', methods=['GET'])
 def view_orders():
     user_id = get_jwt_identity()
-    return jsonify(ORDERS.get(user_id, []))
-
-
-@jwt_required(locations=['headers'])
-@app.route('/orders/<order_id>', methods=['GET'])
-def view_order(order_id):
-    user_id = get_jwt_identity()
-    for order in ORDERS.get(user_id, []):
-        if order_id == order["order_id"]:
-            return jsonify(order)
-    return jsonify({"error": "Order not found"})
+    db = get_db()
+    cur = db.execute("SELECT * FROM orders WHERE user_id = ?", [user_id])
+    orders = cur.fetchall()
+    return jsonify([dict(order) for order in orders])
 
 
 @jwt_required(locations=['headers'])
 @app.route('/checkout', methods=['POST'])
 def checkout():
     user_id = get_jwt_identity()
-    total = sum(item["price"] for item in CART.get(user_id, []))
-    ORDERS.setdefault(user_id, []).append({
-        "order_id": str(uuid.uuid4()),
-        "cart": CART[user_id].copy(),
-        "total": total
-    })
-    CART[user_id] = []
-    return jsonify({"message": "Checkout successful", "total": total})
+    db = get_db()
+    query = """
+    SELECT C.product_id, C.quantity, P.price
+    FROM cart_items AS C
+    JOIN products AS P ON C.product_id = P.product_id
+    WHERE C.user_id = ?
+    """
+    cur = db.execute(query, [user_id])
+    cart_items = cur.fetchall()
+
+    order_total = 0
+    for item in cart_items:
+        product_id = item["product_id"]
+        price = item["price"]
+        quantity = item["quantity"]
+        db.execute(
+            "DELETE FROM cart_items WHERE user_id = ? AND product_id = ?",
+            [user_id, product_id]
+        )
+        db.execute(
+            "INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (? ? ? ?)",
+            [user_id, product_id, quantity, price * quantity]
+        )
+        order_total += price * quantity
+    db.commit()
+    return jsonify({"message": "Checkout successful", "total": order_total})
 
 
 if __name__ == "__main__":
