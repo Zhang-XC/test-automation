@@ -9,6 +9,8 @@ DIR_REPORT = os.path.join(DIR_BASE, "report", "temp")
 
 URL_HOST = "https://127.0.0.1:8888"
 
+API_TIMEOUT = 30
+
 FILE_PATH = {
     "DATABASE": os.path.join(DIR_BASE, "database", "ecommerce.db"),
     "SCHEMA": os.path.join(DIR_BASE, "database", "schema.sql"),
