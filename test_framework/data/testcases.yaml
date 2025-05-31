@@ -1,0 +1,37 @@
+- common:
+    description: Register user
+    url: /auth/register
+    method: POST
+    header:
+      Content-Type: application/x-www-form-urlencoded
+
+  testcases:
+    - caseName: Valid registration
+      data:
+        username: newuser
+        password: test123456
+      validation:
+        - contains:
+            message: Successfully registered user
+        - status: 200
+      extract:
+        token: ${get_extract_data(token)}
+
+  testcases:
+    - caseName: Invalid registration - Username exists
+      data:
+        username: testuser
+        password: test123456
+      validation:
+        - contains:
+            message: Username exists
+        - status: 409
+
+  testcases:
+    - caseName: Invalid registration - Missing username
+      data:
+        username: newuser
+      validation:
+        - contains:
+            message: Missing key parameters
+        - status: 400

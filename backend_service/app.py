@@ -12,29 +12,13 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 from bcrypt import hashpw, checkpw, gensalt
+from common.database import get_db
 
 
 app = flask.Flask(__name__)
 
 app.config['JWT_SECRET_KEY'] = 'super-secret'
 jwt = JWTManager(app)
-
-DATABASE = "database/ecommerce.db"
-SCHEMA = "database/schema.sql"
-
-
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.execute("PRAGMA foreign_keys = ON")
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-def init_db():
-    db = get_db()
-    with open(SCHEMA, 'r') as f:
-        db.executescript(f.read())
 
 
 @app.teardown_appcontext
