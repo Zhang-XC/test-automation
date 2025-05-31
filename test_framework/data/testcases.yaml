@@ -1,12 +1,12 @@
 - common:
-    description: Register user
+    api_name: Register user
     url: /auth/register
     method: POST
     header:
       Content-Type: application/x-www-form-urlencoded
 
   testcases:
-    - caseName: Valid registration
+    - case_name: Valid registration
       data:
         username: newuser
         password: test123456
@@ -18,7 +18,7 @@
         token: ${get_extract_data(token)}
 
   testcases:
-    - caseName: Invalid registration - Username exists
+    - case_name: Invalid registration - Username exists
       data:
         username: testuser
         password: test123456
