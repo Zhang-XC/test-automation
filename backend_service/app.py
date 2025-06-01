@@ -41,7 +41,7 @@ def login():
     user = cur.fetchone()
     if user and checkpw(user["password"].encode(), password_hash):
         acc_token = create_access_token(identity=user["user_id"])
-        response = jsonify({"message": "Login successful"}), 200
+        response = jsonify({"message": "Login successful", "token": acc_token}), 200
         set_access_cookies(response, acc_token)
         return response
     else:
