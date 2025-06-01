@@ -3,8 +3,8 @@ import json
 import allure
 
 from json.decoder import JSONDecodeError
-from common.settings import URL_HOST
-from test_framework.core.read_yaml import resolve_placeholder
+from common.settings import URL_HOST, FILE_PATH
+from test_framework.core.read_yaml import resolve_placeholder, write_yaml
 from test_framework.core.send_request import send_request
 from test_framework.core.extract_response import extract_response
 from test_framework.core.assertions import assert_result
@@ -49,14 +49,15 @@ def run_testcase(testcase: dict):
         )
         status_code = response.status_code
 
-        if extract is not None:
-            extract_response(extract, response.text)
-
         try:
             response_json = response.json()
         except JSONDecodeError as js:
             # TODO: log error
             raise js
+        
+        if extract is not None:
+            extracted_data = extract_response(extract, response_json)
+            write_yaml(FILE_PATH["EXTRACT"], extracted_data)
         
         response_text = json.dumps(response_json, indent=4)
         allure.attach(response_text, "Response", allure.attachment_type.TEXT)
