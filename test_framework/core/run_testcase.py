@@ -1,4 +1,5 @@
 import json
+import traceback
 
 import allure
 
@@ -8,6 +9,7 @@ from test_framework.core.read_yaml import resolve_placeholder, write_yaml
 from test_framework.core.send_request import send_request
 from test_framework.core.extract_response import extract_response
 from test_framework.core.assertions import assert_result
+from test_framework.core.logger import logger
 
 
 def run_testcase(testcase: dict):
@@ -48,9 +50,12 @@ def run_testcase(testcase: dict):
 
         try:
             response_json = response.json()
-        except JSONDecodeError as js:
-            # TODO: log error
-            raise js
+        except Exception as e:
+            logger.error(str(traceback.format_exc()))
+            raise e
+        
+        response_text = json.dumps(response_json, indent=4)
+        allure.attach(response_text, "Response", allure.attachment_type.TEXT)
         
         extract = testcase.get("extract")
         if extract is not None:
@@ -58,14 +63,8 @@ def run_testcase(testcase: dict):
             extracted_data = extract_response(extract, response_json)
             write_yaml(FILE_PATH["EXTRACT"], extracted_data)
         
-        response_text = json.dumps(response_json, indent=4)
-        allure.attach(response_text, "Response", allure.attachment_type.TEXT)
-        
-        try:
-            assert_result(validation, response_json, status_code)
-        except Exception as e:
-            # TODO: log error
-            raise e
-
+        assert_result(validation, response_json, status_code)
+    
     except Exception as e:
+        logger.error(str(traceback.format_exc()))
         raise e

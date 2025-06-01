@@ -1,5 +1,7 @@
 import allure
 
+from test_framework.core.logger import logger
+
 
 def assert_result(validation: list, response: dict, status_code: int):
     n_failed_cases = 0
@@ -17,8 +19,10 @@ def assert_result(validation: list, response: dict, status_code: int):
             raise NotImplementedError
 
     if n_failed_cases != 0:
-        # TODO: log error
+        logger.error("One or more assertions failed")
         assert False
+    else:
+        logger.info("All assertions passed")
 
 
 def assert_equal(expected_output: dict, response: dict):

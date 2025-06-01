@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 
 DIR_BASE = os.path.dirname(os.path.dirname(__file__))
@@ -11,6 +12,9 @@ DIR_TESTCASE = os.path.join(DIR_BASE, "test_framework", "data")
 URL_HOST = "http://127.0.0.1:8888"
 
 API_TIMEOUT = 30
+
+LOG_LEVEL = logging.DEBUG
+STREAM_LEVEL = logging.WARNING
 
 FILE_PATH = {
     "DATABASE": os.path.join(DIR_BASE, "backend_service", "database", "ecommerce.db"),
