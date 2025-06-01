@@ -3,12 +3,13 @@ import json
 
 import yaml
 
+from common.settings import DIR_TESTCASE
 from test_framework.core.utils import Utils
 
 
 def load_testcase(file: str):
     testcases = []
-    with open(file, 'r') as f:
+    with open(os.path.join(DIR_TESTCASE, file), 'r') as f:
         data = yaml.safe_load(f)
     if isinstance(data, dict):
         data = [data]

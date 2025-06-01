@@ -8,11 +8,11 @@ def assert_result(validation: list, response: dict, status_code: int):
         if key == "status":
             n_failed_cases += assert_equal(val, {"status": status_code})
         elif key == "eq":
-            n_failed_cases += assert_equal(val, response)
+            n_failed_cases += assert_equal(val[key], response)
         elif key == "neq":
-            n_failed_cases += assert_not_equal(val, response)
+            n_failed_cases += assert_not_equal(val[key], response)
         elif key == "contains":
-            n_failed_cases += assert_contains(val, response)
+            n_failed_cases += assert_contains(val[key], response)
         else:
             raise NotImplementedError
 

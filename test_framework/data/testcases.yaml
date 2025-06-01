@@ -11,28 +11,26 @@
         username: newuser
         password: test123456
       validation:
+        - status: 200
         - contains:
             message: Successfully registered user
-        - status: 200
 
-  testcases:
     - case_name: Invalid registration - Username exists
       data:
         username: testuser
         password: test123456
       validation:
-        - contains:
-            message: Username exists
         - status: 409
+        - contains:
+            error: Username exists
 
-  testcases:
-    - caseName: Invalid registration - Missing username
+    - case_name: Invalid registration - Missing password
       data:
         username: newuser
       validation:
-        - contains:
-            message: Missing key parameters
         - status: 400
+        - contains:
+            error: Missing key parameters
 
 - common:
     api_name: Login
@@ -47,8 +45,8 @@
         username: testuser
         password: testpassword
       validation:
+        - status: 200
         - contains:
             message: Login successful
-        - status: 200
       extract:
         token: $.token

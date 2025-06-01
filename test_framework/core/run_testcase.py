@@ -39,12 +39,9 @@ def run_testcase(testcase: dict):
         allure.attach(f"Params: {request_kwargs_text}", "Testcase Info", allure.attachment_type.TEXT)
 
         validation = resolve_placeholder(testcase["validation"])
-        validation = eval(validation)
-
-        extract = resolve_placeholder(testcase["extract"])
 
         response = send_request(
-            api_name=api_name, url=url, case_name=case_name, header=header, method=method,
+            url=url, header=header, method=method,
             **request_kwargs
         )
         status_code = response.status_code
@@ -55,7 +52,9 @@ def run_testcase(testcase: dict):
             # TODO: log error
             raise js
         
+        extract = testcase.get("extract")
         if extract is not None:
+            extract = resolve_placeholder(extract)
             extracted_data = extract_response(extract, response_json)
             write_yaml(FILE_PATH["EXTRACT"], extracted_data)
         

@@ -9,7 +9,7 @@ from test_framework.core.run_testcase import run_testcase
 @allure.feature(next(m_id) + "User Management")
 class TestUserManager:
     @pytest.mark.run(order=1)
-    @pytest.mark.parametrize("testcase", load_testcase("../data/testcases.yaml"))
+    @pytest.mark.parametrize("testcase", load_testcase("testcases.yaml"))
     def test_add_user(self, testcase):
         allure.dynamic.title(testcase['case_name'])
         run_testcase(testcase)
