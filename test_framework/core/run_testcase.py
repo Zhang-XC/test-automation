@@ -15,20 +15,20 @@ def run_testcase(testcase: dict):
 
     try:
         api_name = testcase["api_name"]
-        allure.attach(f"API: {api_name}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"API: {api_name}", "Testcase Info", allure.attachment_type.TEXT)
 
         endpoint = testcase["url"]
         url = URL_HOST + endpoint
-        allure.attach(f"URL: {url}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"URL: {url}", "Testcase Info", allure.attachment_type.TEXT)
 
         method = testcase["method"]
-        allure.attach(f"Method: {method}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"Method: {method}", "Testcase Info", allure.attachment_type.TEXT)
 
         header = resolve_placeholder(testcase["header"])
-        allure.attach(f"Header: {header}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"Header: {header}", "Testcase Info", allure.attachment_type.TEXT)
 
         case_name = testcase["case_name"]
-        allure.attach(f"Case: {case_name}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"Case: {case_name}", "Testcase Info", allure.attachment_type.TEXT)
 
         for request_type in allowed_request_type:
             if request_type in testcase:
@@ -36,7 +36,7 @@ def run_testcase(testcase: dict):
                 request_kwargs = {request_type: request_params}
 
         request_kwargs_text = json.dumps(request_kwargs)
-        allure.attach(f"Params: {request_kwargs_text}", api_name, allure.attachment_type.TEXT)
+        allure.attach(f"Params: {request_kwargs_text}", "Testcase Info", allure.attachment_type.TEXT)
 
         validation = resolve_placeholder(testcase["validation"])
         validation = eval(validation)
@@ -59,7 +59,7 @@ def run_testcase(testcase: dict):
             raise js
         
         response_text = json.dumps(response_json, indent=4)
-        allure.attach(response_text, "Returns", allure.attachment_type.TEXT)
+        allure.attach(response_text, "Response", allure.attachment_type.TEXT)
         
         try:
             assert_result(validation, response_json, status_code)
