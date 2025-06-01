@@ -1,0 +1,18 @@
+- common:
+    api_name: Login
+    url: /auth/login
+    method: POST
+    header:
+      Content-Type: application/x-www-form-urlencoded
+
+  testcases:
+    - case_name: Valid login
+      data:
+        username: testuser
+        password: testpassword
+      validation:
+        - status: 200
+        - contains:
+            message: Login successful
+      extract:
+        token: $.token
