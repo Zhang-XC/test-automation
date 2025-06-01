@@ -13,6 +13,7 @@ from flask_jwt_extended import (
 )
 from bcrypt import hashpw, checkpw, gensalt
 from common.database import get_db
+from common.settings import URL_HOST
 
 
 app = flask.Flask(__name__)
@@ -206,4 +207,5 @@ def checkout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    host, port = URL_HOST.replace("http://", "").replace("https://", "").split(":")
+    app.run(host=host, port=int(port), debug=True)

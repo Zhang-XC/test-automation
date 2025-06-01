@@ -17,7 +17,7 @@ CREATE TABLE cart_items (
     quantity INTEGER NOT NULL CHECK (quantity >= 1),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-)
+);
 
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,4 +28,4 @@ CREATE TABLE orders (
     ordered_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-)
+);
