@@ -1,3 +1,4 @@
+import os
 import sqlite3
 
 from flask import g
@@ -13,6 +14,9 @@ def get_db():
 
 
 def init_db():
+    if not os.path.exists(FILE_PATH["DATABASE"]):
+        open(FILE_PATH["DATABASE"], 'a').close()
+    
     db = sqlite3.connect(FILE_PATH["DATABASE"])
     with open(FILE_PATH["SCHEMA"], 'r') as f:
         db.executescript(f.read())
