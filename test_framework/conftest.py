@@ -17,5 +17,11 @@ def cleanup_db():
         ["testuser", "testpassword"]
     )
     db.close()
+    yield
 
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_extract_yaml():
+    with open(FILE_PATH['EXTRACT'], 'w') as f:
+        f.truncate()
     yield
