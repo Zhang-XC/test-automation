@@ -16,3 +16,20 @@
             message: Login successful
       extract:
         token: $.token
+
+    - case_name: Invalid login - Wrong password
+      data:
+        username: testuser
+        password: wrongpassword
+      validation:
+        - status: 400
+        - contains:
+            message: Invalid username or password
+
+    - case_name: Invalid login - Missing username
+      data:
+        password: testpassword
+      validation:
+        - status: 400
+        - contains:
+            message: Missing

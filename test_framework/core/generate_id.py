@@ -10,5 +10,10 @@ def generate_testcase_id():
         yield case_id
 
 
+def generate_order():
+    for order_id in range(1, 10000):
+        yield order_id
+
+
 m_id = generate_module_id()
 c_id = generate_testcase_id()

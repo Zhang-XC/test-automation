@@ -49,7 +49,7 @@ def login():
         return jsonify({"error": "Invalid username or password"}), 400
     
 
-@app.route('/auth/register', methods=['POST'])
+@app.route('/users', methods=['POST'])
 def register_user():
     username = flask.request.form.get('username')
     password = flask.request.form.get('password')
@@ -68,6 +68,21 @@ def register_user():
         return jsonify({"message": "Successfully registered user"}), 200
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username exists"}), 409
+
+
+@jwt_required(locations=['headers'])
+@app.route('/users/me', methods=['DELETE'])
+def delete_user():
+    user_id = get_jwt_identity()
+    db = get_db()
+    cur = db.execute(
+        "DELETE FROM users WHERE user_id = ?",
+        [user_id]
+    )
+    db.commit()
+    if cur.rowcount == 0:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"message": "Successfully deleted user"}), 200
 
 
 @app.route('/products', methods=['GET'])
@@ -90,7 +105,7 @@ def view_product(product_id):
 
 
 @jwt_required(locations=['headers'])
-@app.route('/cart', methods=['GET'])
+@app.route('/cart_items', methods=['GET'])
 def view_cart():
     user_id = get_jwt_identity()
     db = get_db()
@@ -100,7 +115,7 @@ def view_cart():
 
 
 @jwt_required(locations=['headers'])
-@app.route('/cart', methods=['POST'])
+@app.route('/cart_items', methods=['POST'])
 def add_to_cart():
     user_id = get_jwt_identity()
     data = request.get_json()
@@ -133,13 +148,9 @@ def add_to_cart():
 
 
 @jwt_required(locations=['headers'])
-@app.route('/cart/remove', methods=['POST'])
-def remove_from_cart():
+@app.route('/cart_items/<product_id>', methods=['DELETE'])
+def remove_from_cart(product_id):
     user_id = get_jwt_identity()
-    data = request.get_json()
-    product_id = data.get("product_id")
-    if not product_id:
-        return jsonify({"error": "Missing key parameter"}), 400
     
     db = get_db()
     cur = db.execute(
@@ -176,7 +187,7 @@ def view_orders():
 
 
 @jwt_required(locations=['headers'])
-@app.route('/checkout', methods=['POST'])
+@app.route('/orders', methods=['POST'])
 def checkout():
     user_id = get_jwt_identity()
     db = get_db()

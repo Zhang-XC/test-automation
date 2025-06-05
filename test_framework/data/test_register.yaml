@@ -1,6 +1,6 @@
 - common:
-    api_name: Register user
-    url: /auth/register
+    api_name: Register
+    url: /users
     method: POST
     header:
       Content-Type: application/x-www-form-urlencoded
