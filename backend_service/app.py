@@ -57,11 +57,12 @@ def register_user():
         return jsonify({"error": "Missing key parameters"}), 400
     
     password_hash = hashpw(password.encode(), gensalt())
+    user_id = str(uuid.uuid4())
     try:
         db = get_db()
         db.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)", 
-            [username, password_hash.decode()]
+            "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)", 
+            [user_id, username, password_hash.decode()]
         )
         db.commit()
         return jsonify({"message": "Successfully registered user"}), 200
@@ -189,6 +190,7 @@ def checkout():
     cart_items = cur.fetchall()
 
     order_total = 0
+    order_id = str(uuid.uuid4())
     for item in cart_items:
         product_id = item["product_id"]
         price = item["price"]
@@ -198,8 +200,8 @@ def checkout():
             [user_id, product_id]
         )
         db.execute(
-            "INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)",
-            [user_id, product_id, quantity, price * quantity]
+            "INSERT INTO orders (order_id, user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?, ?)",
+            [order_id, user_id, product_id, quantity, price * quantity]
         )
         order_total += price * quantity
     db.commit()

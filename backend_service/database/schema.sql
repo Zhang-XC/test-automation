@@ -1,17 +1,16 @@
 CREATE TABLE users (
-    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL
 );
 
 CREATE TABLE products (
-    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     price REAL NOT NULL
 );
 
 CREATE TABLE cart_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity >= 1),
@@ -20,7 +19,7 @@ CREATE TABLE cart_items (
 );
 
 CREATE TABLE orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity >= 1),

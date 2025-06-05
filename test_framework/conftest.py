@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 
@@ -11,11 +12,13 @@ def cleanup_db():
     if os.path.exists(FILE_PATH["DATABASE"]):
         os.remove(FILE_PATH["DATABASE"])
     
+    user_id = str(uuid.uuid4())
+
     init_db()
     db = get_db()
     db.execute(
-        "INSERT INTO users (username, password) VALUES (?, ?)",
-        ["testuser", "testpassword"]
+        "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
+        [user_id, "testuser", "testpassword"]
     )
     db.commit()
     db.close()
