@@ -41,10 +41,10 @@ def login():
     cur = db.execute("SELECT * FROM users WHERE username = ?", [username])
     user = cur.fetchone()
     if user and checkpw(user["password"].encode(), password_hash):
-        acc_token = create_access_token(identity=user["user_id"])
-        response = jsonify({"message": "Login successful", "token": acc_token}), 200
+        acc_token = create_access_token(identity=str(user["user_id"]))
+        response = jsonify({"message": "Login successful", "token": acc_token})
         set_access_cookies(response, acc_token)
-        return response
+        return response, 200
     else:
         return jsonify({"error": "Invalid username or password"}), 400
     

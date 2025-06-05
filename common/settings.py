@@ -22,4 +22,5 @@ FILE_PATH = {
     "EXTRACT": os.path.join(DIR_BASE, "test_framework", "data", "extracted.yaml"),
     "JUNIT_XML": os.path.join(DIR_BASE, "report", "results.xml"),
     "ENV_XML": os.path.join(DIR_BASE, "environment.xml"),
+    "LOG": os.path.join(DIR_BASE, "logs"),
 }

@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from common.database import init_db
+from common.database import init_db, get_db
 from common.settings import FILE_PATH
 
 
@@ -11,11 +11,13 @@ def cleanup_db():
     if os.path.exists(FILE_PATH["DATABASE"]):
         os.remove(FILE_PATH["DATABASE"])
     
-    db = init_db()
+    init_db()
+    db = get_db()
     db.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)",
         ["testuser", "testpassword"]
     )
+    db.commit()
     db.close()
     yield
 
