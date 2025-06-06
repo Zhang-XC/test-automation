@@ -1,14 +1,18 @@
-import os
 import sqlite3
 
+from flask import g
 from common.settings import FILE_PATH
 
 
 def get_db():
-    db = sqlite3.connect(FILE_PATH["DATABASE"])
-    db.execute("PRAGMA foreign_keys = ON")
-    db.row_factory = sqlite3.Row
-    return db
+    if 'db' not in g:
+        g.db = sqlite3.connect(
+            FILE_PATH["DATABASE"],
+            check_same_thread=False
+        )
+        g.db.execute("PRAGMA foreign_keys = ON")
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
 
 def init_db():

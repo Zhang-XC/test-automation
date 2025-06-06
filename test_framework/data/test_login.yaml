@@ -24,7 +24,7 @@
       validation:
         - status: 400
         - contains:
-            message: Invalid username or password
+            error: Invalid username or password
 
     - case_name: Invalid login - Missing username
       data:
@@ -32,4 +32,4 @@
       validation:
         - status: 400
         - contains:
-            message: Missing
+            error: Missing

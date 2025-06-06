@@ -3,8 +3,7 @@
     url: /users/me
     method: DELETE
     header:
-      Content-Type: application/x-www-form-urlencoded
-      Authorization: "Bearer $get_extract_data(token)"
+      Authorization: "Bearer ${get_extract_data(token)}"
 
   testcases:
     - case_name: Valid user deletion

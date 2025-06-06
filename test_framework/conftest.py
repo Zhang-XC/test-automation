@@ -3,6 +3,7 @@ import uuid
 
 import pytest
 
+from backend_service.app import app
 from common.database import init_db, get_db
 from common.settings import FILE_PATH
 
@@ -15,13 +16,16 @@ def cleanup_db():
     user_id = str(uuid.uuid4())
 
     init_db()
-    db = get_db()
-    db.execute(
-        "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
-        [user_id, "testuser", "testpassword"]
-    )
-    db.commit()
-    db.close()
+
+    with app.app_context():
+        db = get_db()
+        db.execute(
+            "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
+            [user_id, "testuser", "testpassword"]
+        )
+        db.commit()
+        db.close()
+    
     yield
 
 

@@ -32,6 +32,7 @@ def run_testcase(testcase: dict):
         case_name = testcase["case_name"]
         allure.attach(f"Case: {case_name}", "Testcase Info", allure.attachment_type.TEXT)
 
+        request_kwargs = {}
         for request_type in allowed_request_type:
             if request_type in testcase:
                 request_params = resolve_placeholder(testcase[request_type])
@@ -41,6 +42,7 @@ def run_testcase(testcase: dict):
         allure.attach(f"Params: {request_kwargs_text}", "Testcase Info", allure.attachment_type.TEXT)
 
         validation = resolve_placeholder(testcase["validation"])
+        extract = resolve_placeholder(testcase.get("extract", {}))
 
         response = send_request(
             url=url, header=header, method=method,
@@ -50,21 +52,20 @@ def run_testcase(testcase: dict):
 
         try:
             response_json = response.json()
-        except Exception as e:
-            logger.error(str(traceback.format_exc()))
-            raise e
-        
-        response_text = json.dumps(response_json, indent=4)
-        allure.attach(response_text, "Response", allure.attachment_type.TEXT)
-        
-        extract = testcase.get("extract")
-        if extract is not None:
-            extract = resolve_placeholder(extract)
+            
+            response_text = json.dumps(response_json, indent=4)
+            allure.attach(response_text, "Response", allure.attachment_type.TEXT)
+            
             extracted_data = extract_response(extract, response_json)
             write_yaml(FILE_PATH["EXTRACT"], extracted_data)
-        
-        assert_result(validation, response_json, status_code)
+            
+            assert_result(validation, response_json, status_code)
+        except JSONDecodeError as e:
+            logger.error("Response is not a valid JSON")
+            raise e
+        except Exception as e:
+            logger.error(e)
+            raise e
     
     except Exception as e:
-        logger.error(str(traceback.format_exc()))
         raise e
