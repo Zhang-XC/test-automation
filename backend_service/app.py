@@ -8,7 +8,6 @@ from flask_jwt_extended import (
     create_access_token,
     JWTManager,
     jwt_required,
-    set_access_cookies,
     get_jwt_identity,
 )
 from bcrypt import hashpw, checkpw, gensalt
@@ -43,7 +42,6 @@ def login():
     if user and checkpw(user["password"].encode(), password_hash):
         acc_token = create_access_token(identity=str(user["user_id"]))
         response = jsonify({"message": "Login successful", "token": acc_token})
-        set_access_cookies(response, acc_token)
         return response, 200
     else:
         return jsonify({"error": "Invalid username or password"}), 400
@@ -70,8 +68,8 @@ def register_user():
         return jsonify({"error": "Username exists"}), 409
 
 
-@jwt_required(locations=['headers'])
 @app.route('/users/me', methods=['DELETE'])
+@jwt_required(locations=['headers'])
 def delete_user():
     user_id = get_jwt_identity()
     db = get_db()
@@ -104,8 +102,8 @@ def view_product(product_id):
         return jsonify({"error": "Product not found"}), 404
 
 
-@jwt_required(locations=['headers'])
 @app.route('/cart_items', methods=['GET'])
+@jwt_required(locations=['headers'])
 def view_cart():
     user_id = get_jwt_identity()
     db = get_db()
@@ -114,8 +112,8 @@ def view_cart():
     return jsonify([dict(item) for item in cart_items]), 200
 
 
-@jwt_required(locations=['headers'])
 @app.route('/cart_items', methods=['POST'])
+@jwt_required(locations=['headers'])
 def add_to_cart():
     user_id = get_jwt_identity()
     data = request.get_json()
@@ -147,8 +145,8 @@ def add_to_cart():
     return jsonify({"message": "Successfully added item to cart"}), 200
 
 
-@jwt_required(locations=['headers'])
 @app.route('/cart_items/<product_id>', methods=['DELETE'])
+@jwt_required(locations=['headers'])
 def remove_from_cart(product_id):
     user_id = get_jwt_identity()
     
@@ -176,8 +174,8 @@ def remove_from_cart(product_id):
     return jsonify({"message": "Successfully removed product from cart"}), 200
 
 
-@jwt_required(locations=['headers'])
 @app.route('/orders', methods=['GET'])
+@jwt_required(locations=['headers'])
 def view_orders():
     user_id = get_jwt_identity()
     db = get_db()
@@ -186,8 +184,8 @@ def view_orders():
     return jsonify([dict(order) for order in orders]), 200
 
 
-@jwt_required(locations=['headers'])
 @app.route('/orders', methods=['POST'])
+@jwt_required(locations=['headers'])
 def checkout():
     user_id = get_jwt_identity()
     db = get_db()
