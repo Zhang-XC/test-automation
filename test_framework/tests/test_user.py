@@ -13,7 +13,7 @@ order = generate_order()
 class TestUserManager:
     @allure.story(next(c_id) + "Register")
     @pytest.mark.run(order=next(order))
-    @pytest.mark.parametrize("testcase", load_testcase("test_register.yaml"))
+    @pytest.mark.parametrize("testcase", load_testcase("test_register_user.yaml"))
     def test_register(self, testcase):
         allure.dynamic.title(testcase['case_name'])
         run_testcase(testcase)
