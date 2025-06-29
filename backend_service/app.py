@@ -88,7 +88,10 @@ def view_products():
     db = get_db()
     cur = db.execute("SELECT * FROM products")
     products = cur.fetchall()
-    return jsonify([dict(product) for product in products]), 200
+    return jsonify({
+        "products": [dict(product) for product in products],
+        "count": len(products)
+    }), 200
 
 
 @app.route('/products/<product_id>', methods=['GET'])
@@ -97,7 +100,7 @@ def view_product(product_id):
     cur = db.execute("SELECT * FROM products WHERE product_id = ?", [product_id])
     product = cur.fetchone()
     if product:
-        return jsonify(dict(product)), 200
+        return jsonify({"product": dict(product)}), 200
     else:
         return jsonify({"error": "Product not found"}), 404
 
@@ -109,7 +112,10 @@ def view_cart():
     db = get_db()
     cur = db.execute("SELECT * FROM cart_items WHERE user_id = ?", [user_id])
     cart_items = cur.fetchall()
-    return jsonify([dict(item) for item in cart_items]), 200
+    return jsonify({
+        "cart_items": [dict(item) for item in cart_items],
+        "count": len(cart_items)
+    }), 200
 
 
 @app.route('/cart_items', methods=['POST'])
@@ -181,7 +187,10 @@ def view_orders():
     db = get_db()
     cur = db.execute("SELECT * FROM orders WHERE user_id = ?", [user_id])
     orders = cur.fetchall()
-    return jsonify([dict(order) for order in orders]), 200
+    return jsonify({
+        "orders": [dict(order) for order in orders],
+        "count": len(orders)
+    }), 200
 
 
 @app.route('/orders', methods=['POST'])
