@@ -1,0 +1,41 @@
+- common:
+    api_name: All products
+    url: /products
+    method: GET
+    header:
+      Content-Type: application/json
+
+  testcases:
+    - case_name: Get all products
+      validation:
+        - status: 200
+
+- common:
+    api_name: Single product
+    url: /products/123456
+    method: GET
+    header:
+      Content-Type: application/json
+
+  testcases:
+    - case_name: Get product - Valid
+      validation:
+        - status: 200
+        - eq:
+            "product": {
+              "product_id": "123456",
+              "name": "testproduct",
+              "price": 42
+            }
+
+- common:
+    api_name: Single product
+    url: /products/invalid_product
+    method: GET
+    header:
+      Content-Type: application/json
+
+  testcases:
+    - case_name: Get product - Invalid
+      validation:
+        - status: 404
