@@ -19,7 +19,7 @@ def run_testcase(testcase: dict):
         api_name = testcase["api_name"]
         allure.attach(f"API: {api_name}", "Testcase Info", allure.attachment_type.TEXT)
 
-        endpoint = testcase["url"]
+        endpoint = resolve_placeholder(testcase["url"])
         url = URL_HOST + endpoint
         allure.attach(f"URL: {url}", "Testcase Info", allure.attachment_type.TEXT)
 
@@ -56,8 +56,9 @@ def run_testcase(testcase: dict):
             response_text = json.dumps(response_json, indent=4)
             allure.attach(response_text, "Response", allure.attachment_type.TEXT)
             
-            extracted_data = extract_response(extract, response_json)
-            write_yaml(FILE_PATH["EXTRACT"], extracted_data)
+            if extract:
+                extracted_data = extract_response(extract, response_json)
+                write_yaml(FILE_PATH["EXTRACT"], extracted_data)
             
             assert_result(validation, response_json, status_code)
         except JSONDecodeError as e:

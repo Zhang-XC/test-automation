@@ -23,6 +23,10 @@ def cleanup_db():
             "INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)",
             [user_id, "testuser", "testpassword"]
         )
+        db.execute(
+            "INSERT INTO products (product_id, name, price) VALUES (?, ?, ?)",
+            ["123456", "testproduct", 42]
+        )
         db.commit()
         db.close()
     
