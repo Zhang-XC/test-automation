@@ -193,6 +193,21 @@ def view_orders():
     }), 200
 
 
+@app.route('/orders/<order_id>', methods=['GET'])
+@jwt_required(locations=['headers'])
+def view_order(order_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    cur = db.execute(
+        "SELECT * FROM orders WHERE order_id = ? AND user_id = ?",
+        [order_id, user_id]
+    )
+    order = cur.fetchone()
+    if not order:
+        return jsonify({"error": "Invalid order_id"}), 400
+    return jsonify({"order": dict(order)}), 200
+
+
 @app.route('/orders', methods=['POST'])
 @jwt_required(locations=['headers'])
 def checkout():
@@ -223,7 +238,7 @@ def checkout():
         )
         order_total += price * quantity
     db.commit()
-    return jsonify({"message": "Checkout successful", "total": order_total}), 200
+    return jsonify({"message": "Checkout successful", "order_id": order_id, "total": order_total}), 200
 
 
 if __name__ == "__main__":
