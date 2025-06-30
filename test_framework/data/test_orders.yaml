@@ -1,0 +1,58 @@
+- common:
+    api_name: Login
+    url: /auth/login
+    method: POST
+    header:
+      Content-Type: application/x-www-form-urlencoded
+
+  testcases:
+    - case_name: Valid login
+      data:
+        username: testuser
+        password: testpassword
+      validation:
+        - status: 200
+        - contains:
+            message: Login successful
+      extract:
+        token: $.token
+
+- common:
+    api_name: Submit order
+    url: /orders
+    method: POST
+    header:
+      Authorization: "Bearer ${get_extract_data(token)}"
+
+  testcases:
+    - case_name: Submit order - Valid
+      validation:
+        - status: 200
+        - contains:
+            message: Checkout successful
+      extract:
+        order_id: $.order_id
+
+- common:
+    api_name: View order
+    url: /orders/${get_extract_data(order_id)}
+    method: GET
+    header:
+      Authorization: "Bearer ${get_extract_data(token)}"
+
+  testcases:
+    - case_name: View order - Valid
+      validation:
+        - status: 200
+
+- common:
+    api_name: View order
+    url: /orders/invalid_order_id
+    method: GET
+    header:
+      Authorization: "Bearer ${get_extract_data(token)}"
+
+  testcases:
+    - case_name: View order - Invalid
+      validation:
+        - status: 400
