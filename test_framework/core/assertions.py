@@ -1,3 +1,5 @@
+import json
+
 import allure
 
 from test_framework.core.logger import logger
@@ -29,57 +31,60 @@ def assert_equal(expected_output: dict, response: dict):
     if not (isinstance(expected_output, dict) and isinstance(response, dict)):
         raise TypeError
     
-    n_failed_cases = 0
-    for key in expected_output.keys():
-        if expected_output[key] == response[key]:
-            allure.attach(
-                f"Assertion passed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name=f"Equality assertion", attachment_type=allure.attachment_type.TEXT
-            )
-        else:
-            n_failed_cases += 1
-            allure.attach(
-                f"Assertion failed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name="Equality assertion", attachment_type=allure.attachment_type.TEXT
-            )
-    return n_failed_cases
+    actual_output = {key: response[key] for key in expected_output}
+    if expected_output == actual_output:
+        failed = 0
+        allure.attach(
+            f"Assertion passed\nExpected: {expected_output}\nActual: {actual_output}",
+            name=f"Equality assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    else:
+        failed = 1
+        allure.attach(
+            f"Assertion failed\nExpected: {expected_output}\nActual: {actual_output}",
+            name="Equality assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    return failed
 
 
 def assert_not_equal(expected_output: dict, response: dict):
     if not (isinstance(expected_output, dict) and isinstance(response, dict)):
         raise TypeError
-    
-    n_failed_cases = 0
-    for key in expected_output.keys():
-        if expected_output[key] != response[key]:
-            allure.attach(
-                f"Assertion passed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name="Inequality assertion", attachment_type=allure.attachment_type.TEXT
-            )
-        else:
-            n_failed_cases += 1
-            allure.attach(
-                f"Assertion failed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name="Inequality assertion", attachment_type=allure.attachment_type.TEXT
-            )
-    return n_failed_cases
+
+    actual_output = {key: response[key] for key in expected_output}
+    if expected_output != actual_output:
+        failed = 0
+        allure.attach(
+            f"Assertion passed\nExpected: {expected_output}\nActual: {actual_output}",
+            name="Inequality assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    else:
+        failed = 1
+        allure.attach(
+            f"Assertion failed\nExpected: {expected_output}\nActual: {actual_output}",
+            name="Inequality assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    return failed
 
 
 def assert_contains(expected_output: dict, response: dict):
     if not (isinstance(expected_output, dict) and isinstance(response, dict)):
         raise TypeError
     
-    n_failed_cases = 0
+    failed = 0
     for key in expected_output.keys():
-        if str(expected_output[key]) in str(response[key]):
-            allure.attach(
-                f"Assertion passed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name="Containment assertion", attachment_type=allure.attachment_type.TEXT
-            )
-        else:
-            n_failed_cases += 1
-            allure.attach(
-                f"Assertion failed for key: {key}\nExpected: {expected_output[key]}\nActual: {response[key]}",
-                name="Containment assertion", attachment_type=allure.attachment_type.TEXT
-            )
-    return n_failed_cases
+        if expected_output[key] not in response[key]:
+            failed = 1
+
+    actual_output = {key: response[key] for key in expected_output}
+    if failed == 0:
+        allure.attach(
+            f"Assertion passed\nExpected: {expected_output}\nActual: {actual_output}",
+            name="Containment assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    else:
+        allure.attach(
+            f"Assertion failed\nExpected: {expected_output}\nActual: {actual_output}",
+            name="Containment assertion", attachment_type=allure.attachment_type.TEXT
+        )
+    return failed

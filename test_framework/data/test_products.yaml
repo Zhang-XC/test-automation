@@ -39,3 +39,5 @@
     - case_name: Get product - Invalid
       validation:
         - status: 404
+        - contains:
+            error: "Product not found"
