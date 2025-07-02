@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        PYTHONPATH = '..'
-    }
-
     stages {
         stage('Clean Previous Report') {
             steps {
@@ -19,7 +15,9 @@ pipeline {
         stage('Start Backend') {
             steps {
                 powershell '''
-                Start-Process -NoNewWindow -FilePath uv -ArgumentList 'run', 'backend/app.py'
+                cd backend
+                $env:PYTHONPATH = (Resolve-Path "..").Path
+                Start-Process -NoNewWindow -FilePath uv -ArgumentList 'run', 'app.py'
                 '''
                 sleep(time: 5, unit: 'SECONDS')
             }
@@ -28,7 +26,9 @@ pipeline {
         stage('Run Tests') {
             steps {
                 powershell '''
-                uv run test_framework/main.py
+                cd test_framework
+                $env:PYTHONPATH = (Resolve-Path "..").Path
+                uv run main.py
                 '''
             }
         }
