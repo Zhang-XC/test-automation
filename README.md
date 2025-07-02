@@ -1,0 +1,52 @@
+# Automated Test Suite
+
+A Python-based test automation tool. It allows easy management of test cases using 
+YAML and automates test execution and Allure reporting with Jenkins CI support.
+
+## Features
+-   YAML-based test case definition and dynamic request data injection
+-   Automated test execution using `pytest`
+-   Rich HTML reports generated with Allure
+-   Jenkins pipeline configured for continuous integration and report publishing
+-   Dependency management via `uv` and `pyproject.toml`
+
+## Prerequisites
+-   Python 3.12+
+-   `uv` installed (`pip install uv`)
+-   [Allure CLI](https://allurereport.org/docs/install-for-windows/) installed and added to your system PATH
+-   (Optional) [Jenkins](https://www.jenkins.io/download/) installed and configured
+
+## Running Locally
+> **Note:** Before running, ensure your environment's Python module search path 
+includes the project root directory.
+
+1. Start the backend server:
+```
+cd backend
+uv run app.py
+```
+
+2. In a new terminal, run the test suite:
+```
+cd test_framework
+uv run main.py
+```
+
+> The Allure report opens automatically in your browser after tests complete.
+
+## Jenkins Integration
+
+**What Jenkins does** \
+Jenkins automates running your backend, executing tests, and archiving Allure 
+reports—tasks you'd otherwise run manually. It continuously monitors your code 
+changes and performs these steps automatically at the *triggers* you defined.
+
+**Pipeline setup** \
+Jenkins uses a *pipeline* to define the CI/CD operations. The pipeline for this
+project is defined in `Jenkinsfile`. For details on Jenkins pipelines, see 
+[Jenkins Documentation](https://www.jenkins.io/doc/book/pipeline/).
+
+**Triggers** \
+Configure one of the following options to trigger Jenkins builds automatically:
+-   **Poll SCM**: Jenkins checks your repo on regular time intervals.
+-   **Webhook**: Jenkins get triggered at Git pushes.
