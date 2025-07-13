@@ -66,6 +66,26 @@ node {
         ])
     }
 
+    stage('Deploy Allure Report') {
+        withCredentials([string(credentialsId: 'github-token', variable: 'GIT_TOKEN')]) {
+            sh '''
+                git config --global user.email "ci@users.noreply.github.com"
+                git config --global user.name "CI Bot"
+
+                rm -rf gh-pages
+                git clone --branch gh-pages https://Zhang-XC:$GIT_TOKEN@github.com/Zhang-XC/test-automation.git gh-pages
+
+                rm -rf gh-pages/*
+                cp -r test_framework/report/html/* gh-pages/
+
+                cd gh-pages
+                git add .
+                git commit -m "Update Allure report from Jenkins" || echo "Nothing to commit"
+                git push origin gh-pages
+            '''
+        }
+    }
+
     stage('Cleanup') {
         sh 'pkill -u jenkins -x uv || true'
     }
