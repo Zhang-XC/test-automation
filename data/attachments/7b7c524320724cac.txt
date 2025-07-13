@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'error': 'Invalid username or password'}
+Actual: {'error': 'Invalid username or password'}

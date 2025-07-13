@@ -1,0 +1,10 @@
+{
+    "cart_items": [
+        {
+            "product_id": 123456,
+            "quantity": 3,
+            "user_id": "50cf30e6-31c1-4aa7-b650-ea9769df0631"
+        }
+    ],
+    "count": 1
+}

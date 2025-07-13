@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'message': 'Successfully removed'}
+Actual: {'message': 'Successfully removed product from cart'}

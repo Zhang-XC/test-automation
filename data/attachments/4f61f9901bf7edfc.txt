@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'message': 'Login successful'}
+Actual: {'message': 'Login successful'}

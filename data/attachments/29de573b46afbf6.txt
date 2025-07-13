@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'error': 'Username exists'}
+Actual: {'error': 'Username exists'}

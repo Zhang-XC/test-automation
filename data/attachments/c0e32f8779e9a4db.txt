@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'message': 'Successfully registered user'}
+Actual: {'message': 'Successfully registered user'}

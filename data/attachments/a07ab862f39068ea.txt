@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'error': 'Missing key parameter'}
+Actual: {'error': 'Missing key parameter'}

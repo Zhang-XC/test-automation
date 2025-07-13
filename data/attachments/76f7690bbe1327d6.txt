@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'error': 'Item not found'}
+Actual: {'error': 'Item not found in cart'}

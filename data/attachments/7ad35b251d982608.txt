@@ -1,0 +1,1 @@
+INFO     test_framework.core.logger:assertions.py:27 All assertions passed

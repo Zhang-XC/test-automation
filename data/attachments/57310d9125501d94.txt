@@ -1,0 +1,5 @@
+{
+    "message": "Checkout successful",
+    "order_id": "cd6931b9-3e48-4308-b59e-7db6be96ad8e",
+    "total": 84.0
+}

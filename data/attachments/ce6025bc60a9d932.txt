@@ -1,0 +1,3 @@
+{
+    "message": "Successfully removed product from cart"
+}

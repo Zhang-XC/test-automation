@@ -1,0 +1,3 @@
+Assertion passed
+Expected: {'product': {'product_id': '123456', 'name': 'testproduct', 'price': 42}}
+Actual: {'product': {'name': 'testproduct', 'price': 42.0, 'product_id': '123456'}}
