@@ -2,7 +2,7 @@ node {
     stage('Clean Previous Report') {
         sh '''
         if [ -d test_framework/report/temp ]; then
-            rm -rf test_framework/report/temp
+            rm -rf test_framework/report/temp/*
         fi
         '''
     }
@@ -33,7 +33,7 @@ node {
                 )
             }
         } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-            cause = e.causes.get(0)
+            def cause = e.causes.get(0)
             if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
                 echo "Build timed out. Proceeding to next steps."
                 timedOut = true
