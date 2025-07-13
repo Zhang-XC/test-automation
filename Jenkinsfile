@@ -61,8 +61,8 @@ node {
             reportName: 'Allure Report'
         ])
     }
-}
 
-stage('Cleanup') {
-    sh 'pkill -u jenkins -x uv || true'
+    stage('Cleanup') {
+        sh 'pkill -u jenkins -x uv || true'
+    }
 }
