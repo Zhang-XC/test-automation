@@ -4,32 +4,62 @@ pipeline {
     stages {
         stage('Clean Previous Report') {
             steps {
-                powershell '''
-                if (Test-Path -Path test_framework\\report\\temp) {
-                    Remove-Item -Recurse -Force test_framework\\report\\temp
+                script {
+                    if (isUnix()) {
+                        sh '''
+                        if [ -d test_framework/report/temp ]; then
+                            rm -rf test_framework/report/temp
+                        fi
+                        '''
+                    } else {
+                        powershell '''
+                        if (Test-Path -Path test_framework\\report\\temp) {
+                            Remove-Item -Recurse -Force test_framework\\report\\temp
+                        }
+                        '''
+                    }
                 }
-                '''
             }
         }
 
         stage('Start Backend') {
             steps {
-                powershell '''
-                cd backend
-                $env:PYTHONPATH = (Resolve-Path "..").Path
-                Start-Process -NoNewWindow -FilePath uv -ArgumentList 'run', 'app.py'
-                '''
+                script {
+                    if (isUnix()) {
+                        sh '''
+                        cd backend_service
+                        export PYTHONPATH=".."
+                        uv run app.py
+                        '''
+                    } else {
+                        powershell '''
+                        cd backend_service
+                        $env:PYTHONPATH = ".."
+                        uv run app.py
+                        '''
+                    }
+                }
                 sleep(time: 5, unit: 'SECONDS')
             }
         }
 
         stage('Run Tests') {
             steps {
-                powershell '''
-                cd test_framework
-                $env:PYTHONPATH = (Resolve-Path "..").Path
-                uv run main.py
-                '''
+                script {
+                    if (isUnix()) {
+                        sh '''
+                        cd test_framework
+                        export PYTHONPATH=".."
+                        uv run main.py
+                        '''
+                    } else {
+                        powershell '''
+                        cd test_framework
+                        $env:PYTHONPATH = ".."
+                        uv run main.py
+                        '''
+                    }
+                }
             }
         }
 
@@ -46,9 +76,15 @@ pipeline {
 
     post {
         always {
-            powershell '''
-            Get-Process uv -ErrorAction SilentlyContinue | Stop-Process -Force
-            '''
+            script {
+                if (isUnix()) {
+                    sh 'pkill -x uv || true'
+                } else {
+                    powershell '''
+                    Get-Process uv -ErrorAction SilentlyContinue | Stop-Process -Force
+                    '''
+                }
+            }
         }
     }
 }
