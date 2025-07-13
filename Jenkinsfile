@@ -63,10 +63,26 @@ pipeline {
             }
         }
 
+        stage('Generate Allure Report') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                        allure generate test_framework/report/temp -o test_framework/report/html
+                        '''
+                    } else {
+                        powershell '''
+                        allure generate test_framework\\report\\temp -o test_framework\\report\\html
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Publish Allure Report') {
             steps {
                 publishHTML(target: [
-                    reportDir: 'test_framework/report/temp',
+                    reportDir: 'test_framework/report/html',
                     reportFiles: 'index.html',
                     reportName: 'Allure Report'
                 ])
