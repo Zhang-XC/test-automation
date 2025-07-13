@@ -7,6 +7,9 @@ node {
         if [ -d ./report/html ]; then
             rm -rf ./report/html/*
         fi
+        if [ -d ./gh-pages ]; then
+            rm -rf gh-pages
+        fi
         '''
     }
 
@@ -72,11 +75,10 @@ node {
                 git config --global user.email "ci@users.noreply.github.com"
                 git config --global user.name "CI Bot"
 
-                rm -rf gh-pages
                 git clone --branch gh-pages https://Zhang-XC:$GIT_TOKEN@github.com/Zhang-XC/test-automation.git gh-pages
 
                 rm -rf gh-pages/*
-                cp -r test_framework/report/html/* gh-pages/
+                cp -r ./report/html/* gh-pages/
 
                 cd gh-pages
                 git add .
