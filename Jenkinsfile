@@ -12,7 +12,7 @@ node {
     stage('Start Backend and Run Tests') {
         try {
             timeout(time: 1, unit: 'MINUTES') {
-                parallel {
+                parallel(
                     'Start Backend': {
                         sh '''
                         cd backend_service
@@ -30,7 +30,7 @@ node {
                         uv run main.py
                         '''
                     }
-                }
+                )
             }
         } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
             cause = e.causes.get(0)
