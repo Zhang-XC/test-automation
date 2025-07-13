@@ -2,10 +2,10 @@ node {
     stage('Clean Previous Report') {
         sh '''
         if [ -d ./report/temp ]; then
-            rm -rf ./report/temp/*
+            rm -rf ./report/temp
         fi
         if [ -d ./report/html ]; then
-            rm -rf ./report/html/*
+            rm -rf ./report/html
         fi
         if [ -d ./gh-pages ]; then
             rm -rf gh-pages
