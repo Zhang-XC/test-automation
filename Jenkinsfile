@@ -29,6 +29,7 @@ pipeline {
                         sh '''
                         cd backend_service
                         export PYTHONPATH=".."
+                        export PATH=$PATH:/home/ubuntu/.local/bin
                         uv run app.py
                         '''
                     } else {
@@ -50,6 +51,7 @@ pipeline {
                         sh '''
                         cd test_framework
                         export PYTHONPATH=".."
+                        export PATH=$PATH:/home/ubuntu/.local/bin
                         uv run main.py
                         '''
                     } else {
