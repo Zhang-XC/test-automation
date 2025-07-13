@@ -39,7 +39,7 @@ pipeline {
                     steps {
                         script {
                             sh '''
-                            sleep 10
+                            sleep 5
                             cd test_framework
                             export PYTHONPATH=".."
                             export PATH=$PATH:/home/ubuntu/.local/bin
@@ -55,7 +55,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    sleep 20
+                    sleep 10
+                    export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
                     allure generate test_framework/report/temp -o test_framework/report/html
                     '''
                 }
