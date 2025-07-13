@@ -1,11 +1,11 @@
 node {
     stage('Clean Previous Report') {
         sh '''
-        if [ -d test_framework/report/temp ]; then
-            rm -rf test_framework/report/temp/*
+        if [ -d ./report/temp ]; then
+            rm -rf ./report/temp/*
         fi
-        if [ -d test_framework/report/html ]; then
-            rm -rf test_framework/report/html/*
+        if [ -d ./report/html ]; then
+            rm -rf ./report/html/*
         fi
         '''
     }
@@ -50,15 +50,19 @@ node {
         sh '''
         sleep 10
         export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
-        allure generate test_framework/report/temp -o test_framework/report/html
+        mkdir ./report/html
+        allure generate ./report/temp -o ./report/html
         '''
     }
 
     stage('Publish Allure Report') {
         publishHTML(target: [
-            reportDir: 'test_framework/report/html',
+            reportDir: './report/html',
             reportFiles: 'index.html',
-            reportName: 'Allure Report'
+            reportName: 'Allure Report',
+            keepAll: true,
+            alwaysLinkToLastBuild: true,
+            allowMissing: false
         ])
     }
 
