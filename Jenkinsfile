@@ -1,14 +1,10 @@
 node {
     stage('Clean Previous Report') {
-        steps {
-            script {
-                sh '''
-                if [ -d test_framework/report/temp ]; then
-                    rm -rf test_framework/report/temp
-                fi
-                '''
-            }
-        }
+        sh '''
+        if [ -d test_framework/report/temp ]; then
+            rm -rf test_framework/report/temp
+        fi
+        '''
     }
 
     def timedOut = false
@@ -17,31 +13,22 @@ node {
         try {
             timeout(time: 1, unit: 'MINUTES') {
                 parallel {
-                    stage('Start Backend') {
-                        steps {
-                            script {
-                                sh '''
-                                cd backend_service
-                                export PYTHONPATH=".."
-                                export PATH=$PATH:/home/ubuntu/.local/bin
-                                uv run app.py
-                                '''
-                            }
-                        }
-                    }
-
-                    stage('Run Tests') {
-                        steps {
-                            script {
-                                sh '''
-                                sleep 5
-                                cd test_framework
-                                export PYTHONPATH=".."
-                                export PATH=$PATH:/home/ubuntu/.local/bin
-                                uv run main.py
-                                '''
-                            }
-                        }
+                    'Start Backend': {
+                        sh '''
+                        cd backend_service
+                        export PYTHONPATH=".."
+                        export PATH=$PATH:/home/ubuntu/.local/bin
+                        uv run app.py
+                        '''
+                    },
+                    'Run Tests': {
+                        sh '''
+                        sleep 5
+                        cd test_framework
+                        export PYTHONPATH=".."
+                        export PATH=$PATH:/home/ubuntu/.local/bin
+                        uv run main.py
+                        '''
                     }
                 }
             }
@@ -57,32 +44,22 @@ node {
     }
 
     stage('Generate Allure Report') {
-        steps {
-            script {
-                sh '''
-                sleep 10
-                export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
-                allure generate test_framework/report/temp -o test_framework/report/html
-                '''
-            }
-        }
+        sh '''
+        sleep 10
+        export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+        allure generate test_framework/report/temp -o test_framework/report/html
+        '''
     }
 
     stage('Publish Allure Report') {
-        steps {
-            publishHTML(target: [
-                reportDir: 'test_framework/report/html',
-                reportFiles: 'index.html',
-                reportName: 'Allure Report'
-            ])
-        }
+        publishHTML(target: [
+            reportDir: 'test_framework/report/html',
+            reportFiles: 'index.html',
+            reportName: 'Allure Report'
+        ])
     }
 }
 
-post {
-    always {
-        script {
-            sh 'pkill -u jenkins -x uv || true'
-        }
-    }
+stage('Cleanup') {
+    sh 'pkill -u jenkins -x uv || true'
 }
