@@ -14,36 +14,38 @@ pipeline {
             }
         }
 
-        parallel {
-            stage('Start Backend') {
-                options {
-                    timeout(time: 2, unit: 'MINUTES')
-                }
-                steps {
-                    script {
-                        sh '''
-                        cd backend_service
-                        export PYTHONPATH=".."
-                        export PATH=$PATH:/home/ubuntu/.local/bin
-                        uv run app.py
-                        '''
+        stage('Start Backend and Run Tests') {
+            parallel {
+                stage('Start Backend') {
+                    options {
+                        timeout(time: 2, unit: 'MINUTES')
+                    }
+                    steps {
+                        script {
+                            sh '''
+                            cd backend_service
+                            export PYTHONPATH=".."
+                            export PATH=$PATH:/home/ubuntu/.local/bin
+                            uv run app.py
+                            '''
+                        }
                     }
                 }
-            }
 
-            stage('Run Tests') {
-                options {
-                    timeout(time: 2, unit: 'MINUTES')
-                }
-                steps {
-                    script {
-                        sh '''
-                        sleep 10
-                        cd test_framework
-                        export PYTHONPATH=".."
-                        export PATH=$PATH:/home/ubuntu/.local/bin
-                        uv run main.py
-                        '''
+                stage('Run Tests') {
+                    options {
+                        timeout(time: 2, unit: 'MINUTES')
+                    }
+                    steps {
+                        script {
+                            sh '''
+                            sleep 10
+                            cd test_framework
+                            export PYTHONPATH=".."
+                            export PATH=$PATH:/home/ubuntu/.local/bin
+                            uv run main.py
+                            '''
+                        }
                     }
                 }
             }
