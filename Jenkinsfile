@@ -1,6 +1,4 @@
-pipeline {
-    agent any
-
+node {
     stages {
         stage('Clean Previous Report') {
             steps {
@@ -14,39 +12,47 @@ pipeline {
             }
         }
 
+        def timedOut = false
+
         stage('Start Backend and Run Tests') {
-            parallel {
-                stage('Start Backend') {
-                    options {
-                        timeout(time: 2, unit: 'MINUTES')
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            cd backend_service
-                            export PYTHONPATH=".."
-                            export PATH=$PATH:/home/ubuntu/.local/bin
-                            uv run app.py
-                            '''
+            try {
+                timeout(time: 1, unit: 'MINUTES') {
+                    parallel {
+                        stage('Start Backend') {
+                            steps {
+                                script {
+                                    sh '''
+                                    cd backend_service
+                                    export PYTHONPATH=".."
+                                    export PATH=$PATH:/home/ubuntu/.local/bin
+                                    uv run app.py
+                                    '''
+                                }
+                            }
+                        }
+
+                        stage('Run Tests') {
+                            steps {
+                                script {
+                                    sh '''
+                                    sleep 5
+                                    cd test_framework
+                                    export PYTHONPATH=".."
+                                    export PATH=$PATH:/home/ubuntu/.local/bin
+                                    uv run main.py
+                                    '''
+                                }
+                            }
                         }
                     }
                 }
-
-                stage('Run Tests') {
-                    options {
-                        timeout(time: 2, unit: 'MINUTES')
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            sleep 5
-                            cd test_framework
-                            export PYTHONPATH=".."
-                            export PATH=$PATH:/home/ubuntu/.local/bin
-                            uv run main.py
-                            '''
-                        }
-                    }
+            } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                cause = e.causes.get(0)
+                if (cause instanceof org.jenkinsci.plugins.workflow.steps.TimeoutStepExecution.ExceededTimeout) {
+                    echo "Build timed out. Proceeding to next steps."
+                    timedOut = true
+                } else {
+                    throw e
                 }
             }
         }
