@@ -4,6 +4,9 @@ node {
         if [ -d test_framework/report/temp ]; then
             rm -rf test_framework/report/temp/*
         fi
+        if [ -d test_framework/report/html ]; then
+            rm -rf test_framework/report/html/*
+        fi
         '''
     }
 
