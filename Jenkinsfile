@@ -5,59 +5,43 @@ pipeline {
         stage('Clean Previous Report') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh '''
-                        if [ -d test_framework/report/temp ]; then
-                            rm -rf test_framework/report/temp
-                        fi
-                        '''
-                    } else {
-                        powershell '''
-                        if (Test-Path -Path test_framework\\report\\temp) {
-                            Remove-Item -Recurse -Force test_framework\\report\\temp
-                        }
-                        '''
-                    }
+                    sh '''
+                    if [ -d test_framework/report/temp ]; then
+                        rm -rf test_framework/report/temp
+                    fi
+                    '''
                 }
             }
         }
 
-        stage('Start Backend') {
-            steps {
-                script {
-                    if (isUnix()) {
+        parallel {
+            stage('Start Backend') {
+                options {
+                    timeout(time: 2, unit: 'MINUTES')
+                }
+                steps {
+                    script {
                         sh '''
                         cd backend_service
                         export PYTHONPATH=".."
                         export PATH=$PATH:/home/ubuntu/.local/bin
                         uv run app.py
                         '''
-                    } else {
-                        powershell '''
-                        cd backend_service
-                        $env:PYTHONPATH = ".."
-                        uv run app.py
-                        '''
                     }
                 }
-                sleep(time: 5, unit: 'SECONDS')
             }
-        }
 
-        stage('Run Tests') {
-            steps {
-                script {
-                    if (isUnix()) {
+            stage('Run Tests') {
+                options {
+                    timeout(time: 2, unit: 'MINUTES')
+                }
+                steps {
+                    script {
                         sh '''
+                        sleep 10
                         cd test_framework
                         export PYTHONPATH=".."
                         export PATH=$PATH:/home/ubuntu/.local/bin
-                        uv run main.py
-                        '''
-                    } else {
-                        powershell '''
-                        cd test_framework
-                        $env:PYTHONPATH = ".."
                         uv run main.py
                         '''
                     }
@@ -68,15 +52,10 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh '''
-                        allure generate test_framework/report/temp -o test_framework/report/html
-                        '''
-                    } else {
-                        powershell '''
-                        allure generate test_framework\\report\\temp -o test_framework\\report\\html
-                        '''
-                    }
+                    sh '''
+                    sleep 20
+                    allure generate test_framework/report/temp -o test_framework/report/html
+                    '''
                 }
             }
         }
@@ -95,13 +74,7 @@ pipeline {
     post {
         always {
             script {
-                if (isUnix()) {
-                    sh 'pkill -x uv || true'
-                } else {
-                    powershell '''
-                    Get-Process uv -ErrorAction SilentlyContinue | Stop-Process -Force
-                    '''
-                }
+                sh 'pkill -u jenkins -x uv || true'
             }
         }
     }

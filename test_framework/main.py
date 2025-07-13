@@ -17,4 +17,4 @@ if __name__ == "__main__":
     ])
 
     shutil.copy(FILE_PATH["ENV_XML"], DIR_REPORT)
-    os.system(f"allure serve {DIR_REPORT}")
+    # os.system(f"allure serve {DIR_REPORT}")
