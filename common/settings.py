@@ -9,7 +9,7 @@ sys.path.append(DIR_BASE)
 DIR_REPORT = os.path.join(DIR_BASE, "report", "temp")
 DIR_TESTCASE = os.path.join(DIR_BASE, "test_framework", "data")
 
-URL_HOST = "http://56.228.15.203:8888"
+URL_HOST = "http://0.0.0.0:8888"
 
 API_TIMEOUT = 30
 
